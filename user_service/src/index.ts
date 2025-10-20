@@ -7,7 +7,9 @@ import userRoutes from "./routes.js";
 
 const connectDb = async () => {
 	try {
-		mongoose.connect(process.env.MONGO_URI as string);
+		mongoose.connect(process.env.MONGO_URI as string, {
+			dbName: "spotify",
+		});
 
 		console.log("✅ MongoDB Connected");
 	} catch (error) {
