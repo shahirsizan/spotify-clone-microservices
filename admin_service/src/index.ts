@@ -2,8 +2,38 @@ import express from "express";
 import dotenv from "dotenv";
 import { sql } from "./config/db.js";
 import adminRoutes from "./routes.js";
+import cloudinary from "cloudinary";
 import cors from "cors";
 dotenv.config();
+
+/**
+ * cloudinary.v2.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+ * above code renders warnings for possible null env variables. 
+That's why we impose checking like below to ensure no env variables are null
+ */
+
+// Define a function or wrapper to ensure variables are present
+function requireEnv(name: string): string {
+	const value = process.env[name];
+	if (!value) {
+		// Stop the application if a required variable is missing
+		throw new Error(
+			`FATAL ERROR: Environment variable ${name} is not set.`
+		);
+	}
+	return value;
+}
+
+cloudinary.v2.config({
+	// Use the helper function to guarantee the type is 'string'
+	cloud_name: requireEnv("CLOUDINARY_CLOUD_NAME"),
+	api_key: requireEnv("CLOUDINARY_API_KEY"),
+	api_secret: requireEnv("CLOUDINARY_API_SECRET"),
+});
 
 const app = express();
 app.use(cors());
