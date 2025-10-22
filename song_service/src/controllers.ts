@@ -36,11 +36,28 @@ export const getAllAlbum = async (req: any, res: any) => {
 export const getAllsongs = async (req: any, res: any) => {
 	try {
 		let songs;
+		const CACHE_EXPIRY_SECONDS = 180; // 3 minutes
 
-		songs = await sql`SELECT * FROM songs`;
+		if (redisClient.isReady) {
+			songs = (await redisClient.get("songs")) as string;
+			songs = JSON.parse(songs);
+		}
 
-		res.json({ message: "Here are all the songs", songs: songs });
-		return;
+		if (songs) {
+			res.json({ message: "All songs from cache", songs: songs });
+			return;
+		} else {
+			songs = await sql`SELECT * FROM songs`;
+
+			if (redisClient.isReady) {
+				redisClient.set("songs", JSON.stringify(songs), {
+					EX: CACHE_EXPIRY_SECONDS,
+				});
+			}
+
+			res.json({ message: "All songs from DB", songs: songs });
+			return;
+		}
 	} catch (error: any) {
 		res.status(500).json({
 			message: error.message,
